@@ -3,6 +3,7 @@ import bannerUrl from './aidevcon-banner.png';
 import { palette } from './palette';
 import {
   CART_KINDS,
+  jumpHeight,
   toScreen,
   type BoothSlot,
   type MidwayMap,
@@ -791,10 +792,19 @@ function person(
   x: number,
   y: number,
   look: Look,
-  options: { swing?: number; back?: boolean; dir?: number; player?: boolean; t?: number } = {},
+  options: {
+    swing?: number;
+    back?: boolean;
+    dir?: number;
+    player?: boolean;
+    t?: number;
+    /** How far above the ground the person is, mid-jump. */
+    lift?: number;
+  } = {},
 ) {
   const swing = options.swing ?? 0;
   const dir = options.dir ?? 1;
+  const lift = options.lift ?? 0;
   oval(ctx, x, y, 5, 2, palette.shadow);
   if (options.player) {
     ctx.strokeStyle = palette.gold;
@@ -803,6 +813,8 @@ function person(
     ctx.ellipse(x, y, 8, 3.5, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
+  // The shadow and ring stay on the ground while the body leaves it.
+  ctx.translate(0, -lift);
   stroke(
     ctx,
     [
@@ -882,6 +894,7 @@ function person(
       palette.gold,
     );
   }
+  ctx.translate(0, lift);
 }
 
 function cart(ctx: Ctx, prop: Prop, t: number) {
@@ -1620,6 +1633,7 @@ export function drawWalker(ctx: Ctx, walker: Walker, look: Look, player = false,
   const swing = walker.walking ? Math.sin(walker.stride * Math.PI * 2.2) : 0;
   person(ctx, p.x, p.y, look, {
     swing,
+    lift: jumpHeight(walker),
     back: walker.facing === 'back',
     dir: walker.flipped ? -1 : 1,
     player,
